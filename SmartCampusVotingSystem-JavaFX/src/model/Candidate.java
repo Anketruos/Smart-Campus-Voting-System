@@ -1,6 +1,10 @@
 package model;
 
-public class Candidate {
+import java.io.Serializable;
+
+/** Serializable so candidate data can be saved/transmitted (Unit 2). */
+public class Candidate implements Serializable {
+    private static final long serialVersionUID = 1L;
     private int id;
     private int electionId;
     private String name;

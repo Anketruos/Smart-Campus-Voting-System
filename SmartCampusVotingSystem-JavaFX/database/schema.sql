@@ -55,6 +55,25 @@ CREATE TABLE IF NOT EXISTS votes (
     FOREIGN KEY (candidate_id) REFERENCES candidates(id)
 );
 
--- Default admin (password: admin123)
+-- Default admin credentials (username: admin, password: admin123)
+-- Hash is SHA-256 of "admin123"
 INSERT IGNORE INTO admins (username, password_hash)
 VALUES ('admin', 'jGl25bVBBBW96Qi9Te4V37Fnqchz/Eu4qB9vKrRIqRg=');
+
+-- Sample pre-approved voters (student must use matching student_id + email to register)
+INSERT IGNORE INTO preapproved_voters (student_id, email) VALUES
+('STU001', 'student1@campus.edu'),
+('STU002', 'student2@campus.edu'),
+('STU003', 'student3@campus.edu'),
+('STU004', 'student4@campus.edu'),
+('STU005', 'student5@campus.edu');
+
+-- Sample election
+INSERT IGNORE INTO elections (id, title, description, start_date, end_date, active) VALUES
+(1, 'Student Council Election 2026', 'Vote for your student council president.', '2026-04-01', '2026-04-30', TRUE);
+
+-- Sample candidates for the election
+INSERT IGNORE INTO candidates (election_id, name, position, bio) VALUES
+(1, 'Alice Johnson', 'President', 'Committed to improving campus facilities.'),
+(1, 'Bob Smith', 'President', 'Focused on student welfare and academic support.'),
+(1, 'Carol White', 'President', 'Advocating for more student events and clubs.');

@@ -1,15 +1,21 @@
 package model;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class Vote {
-    private int id;
-    private int voterId;
-    private int electionId;
-    private int candidateId;
-    private LocalDateTime timestamp;
+/**
+ * Immutable Vote object — once a vote is cast its data cannot be altered,
+ * ensuring election integrity (Unit 1: Immutability).
+ * Implements Serializable for object serialization (Unit 2).
+ */
+public final class Vote implements Serializable {
+    private static final long serialVersionUID = 1L;
 
-    public Vote() {}
+    private final int id;
+    private final int voterId;
+    private final int electionId;
+    private final int candidateId;
+    private final LocalDateTime timestamp;
 
     public Vote(int id, int voterId, int electionId, int candidateId, LocalDateTime timestamp) {
         this.id = id;
@@ -19,18 +25,15 @@ public class Vote {
         this.timestamp = timestamp;
     }
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
-
-    public int getVoterId() { return voterId; }
-    public void setVoterId(int voterId) { this.voterId = voterId; }
-
-    public int getElectionId() { return electionId; }
-    public void setElectionId(int electionId) { this.electionId = electionId; }
-
-    public int getCandidateId() { return candidateId; }
-    public void setCandidateId(int candidateId) { this.candidateId = candidateId; }
-
+    public int getId()           { return id; }
+    public int getVoterId()      { return voterId; }
+    public int getElectionId()   { return electionId; }
+    public int getCandidateId()  { return candidateId; }
     public LocalDateTime getTimestamp() { return timestamp; }
-    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+
+    @Override
+    public String toString() {
+        return "Vote{id=" + id + ", voter=" + voterId + ", election=" + electionId
+             + ", candidate=" + candidateId + ", time=" + timestamp + "}";
+    }
 }

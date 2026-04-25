@@ -5,28 +5,32 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.Properties;
 
+/**
+ * Provides JDBC database connections (Unit 3: Persistence and Databases).
+ * Loads connection settings from config.properties.
+ */
 public class DBConnection {
-    private static Connection connection;
 
-    public static Connection getConnection() throws Exception {
-        if (connection == null || connection.isClosed()) {
+    private static String url;
+    private static String user;
+    private static String password;
+
+    static {
+        try {
             Properties props = new Properties();
             InputStream input = DBConnection.class.getClassLoader().getResourceAsStream("config.properties");
             props.load(input);
-
-            String url = props.getProperty("db.url");
-            String user = props.getProperty("db.user");
-            String password = props.getProperty("db.password");
-
+            url = props.getProperty("db.url");
+            user = props.getProperty("db.user");
+            password = props.getProperty("db.password");
             Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection(url, user, password);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to load DB config: " + e.getMessage(), e);
         }
-        return connection;
     }
 
-    public static void close() throws Exception {
-        if (connection != null && !connection.isClosed()) {
-            connection.close();
-        }
+    /** Returns a new connection each call — callers must close it (use try-with-resources). */
+    public static Connection getConnection() throws Exception {
+        return DriverManager.getConnection(url, user, password);
     }
 }

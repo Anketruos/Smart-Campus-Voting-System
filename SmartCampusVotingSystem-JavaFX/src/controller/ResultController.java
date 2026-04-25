@@ -30,4 +30,12 @@ public class ResultController {
             return "Unknown";
         }
     }
+
+    public int loadTotalVotes(int electionId) {
+        try {
+            return resultService.getTotalVotes(electionId);
+        } catch (Exception e) {
+            return 0;
+        }
+    }
 }
