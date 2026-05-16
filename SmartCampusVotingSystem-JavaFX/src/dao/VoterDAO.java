@@ -7,17 +7,24 @@ import java.util.List;
 
 public class VoterDAO {
 
-    public void insert(Voter voter) throws Exception {
+    public Voter insert(Voter voter) throws Exception {
         String sql = "INSERT INTO voters (student_id, name, email, password_hash, has_voted) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, voter.getStudentId());
             ps.setString(2, voter.getName());
             ps.setString(3, voter.getEmail());
             ps.setString(4, voter.getPasswordHash());
             ps.setBoolean(5, voter.isHasVoted());
             ps.executeUpdate();
+
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    voter.setId(keys.getInt(1));
+                }
+            }
         }
+        return voter;
     }
 
     public Voter findByStudentId(String studentId) throws Exception {
@@ -42,8 +49,19 @@ public class VoterDAO {
         return null;
     }
 
+    public Voter findById(int id) throws Exception {
+        String sql = "SELECT * FROM voters WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return mapRow(rs);
+        }
+        return null;
+    }
+
     public void markVoted(int voterId) throws Exception {
-        String sql = "UPDATE voters SET has_voted = TRUE WHERE id = ?";
+        String sql = "UPDATE voters SET has_voted = 1 WHERE id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, voterId);
@@ -51,9 +69,22 @@ public class VoterDAO {
         }
     }
 
+    public boolean hasAnyVote(int voterId) throws Exception {
+        String sql = "SELECT has_voted FROM voters WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, voterId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getBoolean("has_voted");
+            }
+        }
+        return false;
+    }
+
     public List<Voter> findAll() throws Exception {
         List<Voter> list = new ArrayList<>();
-        String sql = "SELECT * FROM voters";
+        String sql = "SELECT * FROM voters ORDER BY name";
         try (Connection conn = DBConnection.getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {

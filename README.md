@@ -1,73 +1,96 @@
 # Smart Campus Voting System
 
-A JavaFX desktop application for managing campus elections. Students can register, log in, and cast votes. Admins manage elections, candidates, and voter approvals.
+A JavaFX desktop application for campus elections. Students register with pre-approved campus credentials, log in, view active elections, and cast exactly one vote per election. Administrators manage elections, candidates, approved voters, and view real-time results.
 
----
+## Main Features
+
+- Student registration with pre-approval checks
+- Secure login for students and admin users
+- Active-election dashboard with candidate viewing and vote casting
+- One-vote-per-election enforcement
+- Admin election and candidate management
+- Real-time result viewing using Java streams and lambdas
+- SQLite database with JDBC and automatic schema initialization
+- Serializable candidate data utility
+- Socket server and RMI server examples for networking units
+- Synchronized voting logic for concurrency protection
 
 ## Project Structure
 
-```
+```text
 SmartCampusVotingSystem-JavaFX/
-├── database/
-│   └── schema.sql          # MySQL schema + sample data
-├── lib/
-│   └── mysql-connector.jar # JDBC driver
-└── src/
-    ├── app/        MainApp.java          (entry point)
-    ├── controller/ AuthController, AdminController, VoterController, VotingController, ResultController, ElectionController, CandidateController
-    ├── dao/        DBConnection, VoterDAO, ElectionDAO, CandidateDAO, VoteDAO, PreapprovedVoterDAO
-    ├── model/      Voter, Admin, Election, Candidate, Vote (immutable), PreapprovedVoter
-    ├── network/    VotingServer, VotingClient   (Unit 4: Networking)
-    ├── rmi/        VotingRemote, VotingRemoteImpl, VotingRMIServer  (Unit 5: RMI)
-    ├── service/    AuthService, ElectionService, CandidateService, VotingService, ResultService
-    ├── ui/         LoginUI, AdminLoginUI, RegisterUI, AdminUI, ElectionUI, VoterUI, VoteUI, ResultUI
-    ├── util/       AlertUtil, BallotSerializer, PasswordUtil, SessionManager, ValidationUtil
-    └── resources/  config.properties, styles.css
+|-- database/
+|   `-- schema.sql
+|-- lib/
+|   |-- javafx/
+|   `-- sqlite-jdbc-<version>.jar
+|-- src/
+|   |-- app/
+|   |-- controller/
+|   |-- dao/
+|   |-- model/
+|   |-- network/
+|   |-- rmi/
+|   |-- service/
+|   |-- ui/
+|   |-- util/
+|   `-- resources/
+|-- compile.bat
+|-- run-app.bat
+|-- run-rmi-server.bat
+`-- run-socket-server.bat
 ```
 
----
+## Technologies Used
 
-## Setup
+- Java 17
+- JavaFX
+- JDBC
+- SQLite
+- Java serialization
+- Java sockets
+- Java RMI
+- Multithreading and synchronization
 
-### 1. Database
-- Install MySQL and run `database/schema.sql`
-- Edit `src/resources/config.properties` and set your MySQL password:
-  ```
-  db.url=jdbc:mysql://localhost:3306/smart_campus_voting
-  db.user=root
-  db.password=YOUR_PASSWORD
-  ```
+## Running the Project
 
-### 2. Compile & Run
-Add `lib/mysql-connector.jar` and JavaFX SDK to your classpath, then run `app.MainApp`.
+1. Place the JavaFX jars inside `SmartCampusVotingSystem-JavaFX/lib/javafx/`.
+2. Place the SQLite JDBC jar inside `SmartCampusVotingSystem-JavaFX/lib/`.
+3. Run `run-app.bat`.
 
----
+The application automatically creates `database/campus_voting.db` and loads the schema from `src/resources/schema.sql` on first run.
 
 ## Default Credentials
 
-| Role  | Username | Password  |
-|-------|----------|-----------|
-| Admin | admin    | admin123  |
+- Admin username: `admin`
+- Admin password: `admin123`
 
-### Sample Pre-approved Voters
-Register using one of these student ID + email pairs:
+## Sample Approved Students
 
-| Student ID | Email                  |
-|------------|------------------------|
-| STU001     | student1@campus.edu    |
-| STU002     | student2@campus.edu    |
-| STU003     | student3@campus.edu    |
+- `STU001` / `student1@campus.edu`
+- `STU002` / `student2@campus.edu`
+- `STU003` / `student3@campus.edu`
+- `STU004` / `student4@campus.edu`
+- `STU005` / `student5@campus.edu`
 
----
+Students still create their own passwords during registration.
 
 ## Unit Coverage
 
-| Unit | Topic                          | Where Applied                                              |
-|------|--------------------------------|------------------------------------------------------------|
-| 1    | Lambdas, Streams, Immutability | `ResultService` (streams/lambdas), `Vote` (immutable)      |
-| 2    | Serialization, Collections     | `BallotSerializer`, `ArrayList`/`HashMap` in all DAOs      |
-| 3    | JDBC / Persistence             | All DAO classes, `DBConnection`                            |
-| 4    | Networking / Sockets           | `VotingServer`, `VotingClient`                             |
-| 5    | RMI                            | `VotingRemote`, `VotingRemoteImpl`, `VotingRMIServer`      |
-| 6    | Multithreading / Synchronization | `VotingServer` (threads per client), `VotingService` (synchronized) |
-| 7    | JavaFX GUI                     | All UI classes in `src/ui/`                                |
+| Unit | Topic | Where It Appears |
+|------|-------|------------------|
+| 1 | Functional programming, lambdas, streams, immutability | `ResultService`, immutable `Vote` |
+| 2 | Packages, collections, serialization | DAO collections, `BallotSerializer` |
+| 3 | JDBC and persistence | `DBConnection` and all DAO classes |
+| 4 | Networking and client-server | `network/VotingServer`, `VotingClient` |
+| 5 | RMI | `rmi/VotingRemote`, `VotingRemoteImpl`, `VotingRMIServer` |
+| 6 | Multithreading and synchronization | synchronized vote casting, threaded socket server |
+| 7 | GUI | JavaFX screens in `src/ui/` |
+
+## Notes for Demonstration
+
+- Use the admin account to pre-approve new students if needed.
+- Create or edit elections from the admin dashboard.
+- Add candidates before voting starts.
+- Students can only vote while the election is active and within its date range.
+- Results update from the stored vote records, not from temporary memory.

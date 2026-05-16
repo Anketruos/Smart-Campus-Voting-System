@@ -36,4 +36,9 @@ public class Voter {
 
     public boolean isHasVoted() { return hasVoted; }
     public void setHasVoted(boolean hasVoted) { this.hasVoted = hasVoted; }
+
+    @Override
+    public String toString() {
+        return name + " (" + studentId + ")";
+    }
 }

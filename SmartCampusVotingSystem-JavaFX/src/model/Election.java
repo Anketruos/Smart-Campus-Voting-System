@@ -38,4 +38,9 @@ public class Election {
 
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+
+    @Override
+    public String toString() {
+        return title;
+    }
 }

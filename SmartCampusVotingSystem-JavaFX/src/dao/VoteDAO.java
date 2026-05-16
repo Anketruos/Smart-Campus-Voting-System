@@ -1,7 +1,12 @@
 package dao;
 
 import model.Vote;
-import java.sql.*;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,15 +33,36 @@ public class VoteDAO {
             ps.setInt(1, voterId);
             ps.setInt(2, electionId);
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) return rs.getInt(1) > 0;
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
         }
         return false;
     }
 
-    // Returns candidateId -> voteCount for a given election
+    public Vote findByVoterAndElection(int voterId, int electionId) throws Exception {
+        String sql = "SELECT * FROM votes WHERE voter_id = ? AND election_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, voterId);
+            ps.setInt(2, electionId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return new Vote(
+                    rs.getInt("id"),
+                    rs.getInt("voter_id"),
+                    rs.getInt("election_id"),
+                    rs.getInt("candidate_id"),
+                    rs.getTimestamp("timestamp").toLocalDateTime()
+                );
+            }
+        }
+        return null;
+    }
+
     public Map<Integer, Integer> getResultsByElection(int electionId) throws Exception {
         Map<Integer, Integer> results = new HashMap<>();
-        String sql = "SELECT candidate_id, COUNT(*) as total FROM votes WHERE election_id = ? GROUP BY candidate_id";
+        String sql = "SELECT candidate_id, COUNT(*) AS total FROM votes WHERE election_id = ? GROUP BY candidate_id";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, electionId);
@@ -50,7 +76,7 @@ public class VoteDAO {
 
     public List<Vote> findAll() throws Exception {
         List<Vote> list = new ArrayList<>();
-        String sql = "SELECT * FROM votes";
+        String sql = "SELECT * FROM votes ORDER BY timestamp DESC";
         try (Connection conn = DBConnection.getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {

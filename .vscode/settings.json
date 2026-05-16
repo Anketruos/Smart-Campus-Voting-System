@@ -1,0 +1,9 @@
+{
+  "java.project.sourcePaths": [
+    "SmartCampusVotingSystem-JavaFX/src"
+  ],
+  "java.project.outputPath": "SmartCampusVotingSystem-JavaFX/bin",
+  "java.project.referencedLibraries": [
+    "SmartCampusVotingSystem-JavaFX/lib/**/*.jar"
+  ]
+}

@@ -26,4 +26,9 @@ public class PreapprovedVoter {
 
     public boolean isRegistered() { return registered; }
     public void setRegistered(boolean registered) { this.registered = registered; }
+
+    @Override
+    public String toString() {
+        return studentId + " - " + email + (registered ? " [Registered]" : " [Pending]");
+    }
 }

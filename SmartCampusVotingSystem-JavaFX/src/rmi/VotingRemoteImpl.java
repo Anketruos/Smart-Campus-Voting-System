@@ -1,24 +1,15 @@
 package rmi;
 
-import dao.VoteDAO;
-import dao.VoterDAO;
-import model.Vote;
 import service.ResultService;
+import service.VotingService;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.time.LocalDateTime;
 import java.util.Map;
 
-/**
- * RMI Server Implementation (Unit 5: Remote Method Invocation).
- * Student clients can invoke castVote() on this object remotely,
- * as if it were a local method call.
- */
 public class VotingRemoteImpl extends UnicastRemoteObject implements VotingRemote {
 
-    private final VoteDAO voteDAO = new VoteDAO();
-    private final VoterDAO voterDAO = new VoterDAO();
+    private final VotingService votingService = new VotingService();
     private final ResultService resultService = new ResultService();
 
     public VotingRemoteImpl() throws RemoteException {
@@ -28,12 +19,7 @@ public class VotingRemoteImpl extends UnicastRemoteObject implements VotingRemot
     @Override
     public synchronized String castVote(int voterId, int electionId, int candidateId) throws RemoteException {
         try {
-            if (voteDAO.hasVoted(voterId, electionId))
-                return "ERROR: You have already voted in this election.";
-
-            Vote vote = new Vote(0, voterId, electionId, candidateId, LocalDateTime.now());
-            voteDAO.insert(vote);
-            voterDAO.markVoted(voterId);
+            votingService.castVote(voterId, electionId, candidateId);
             return "OK: Vote recorded successfully.";
         } catch (Exception e) {
             return "ERROR: " + e.getMessage();

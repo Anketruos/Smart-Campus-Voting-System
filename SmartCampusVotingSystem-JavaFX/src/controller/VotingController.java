@@ -15,11 +15,20 @@ public class VotingController {
 
     public void handleCastVote(int electionId, int candidateId) {
         try {
-            votingService.castVote(electionId, candidateId);
+            votingService.castVoteForCurrentVoter(electionId, candidateId);
             AlertUtil.showInfo("Vote Cast", "Your vote has been recorded successfully.");
             new VoterUI(stage).show();
         } catch (Exception e) {
             AlertUtil.showError("Voting Error", e.getMessage());
+        }
+    }
+
+    public boolean hasCurrentVoterVotedInElection(int electionId) {
+        try {
+            return votingService.hasCurrentVoterVotedInElection(electionId);
+        } catch (Exception e) {
+            AlertUtil.showError("Voting Error", e.getMessage());
+            return false;
         }
     }
 }

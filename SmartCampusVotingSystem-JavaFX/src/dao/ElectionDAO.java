@@ -10,13 +10,19 @@ public class ElectionDAO {
     public void insert(Election election) throws Exception {
         String sql = "INSERT INTO elections (title, description, start_date, end_date, active) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, election.getTitle());
             ps.setString(2, election.getDescription());
-            ps.setDate(3, Date.valueOf(election.getStartDate()));
-            ps.setDate(4, Date.valueOf(election.getEndDate()));
+            ps.setString(3, election.getStartDate().toString());
+            ps.setString(4, election.getEndDate().toString());
             ps.setBoolean(5, election.isActive());
             ps.executeUpdate();
+
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    election.setId(keys.getInt(1));
+                }
+            }
         }
     }
 
@@ -33,7 +39,7 @@ public class ElectionDAO {
 
     public List<Election> findAll() throws Exception {
         List<Election> list = new ArrayList<>();
-        String sql = "SELECT * FROM elections";
+        String sql = "SELECT * FROM elections ORDER BY active DESC, start_date DESC, title";
         try (Connection conn = DBConnection.getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
@@ -44,10 +50,13 @@ public class ElectionDAO {
 
     public List<Election> findActive() throws Exception {
         List<Election> list = new ArrayList<>();
-        String sql = "SELECT * FROM elections WHERE active = TRUE";
+        String sql = "SELECT * FROM elections WHERE active = 1 AND start_date <= ? AND end_date >= ? ORDER BY start_date, title";
+        String today = java.time.LocalDate.now().toString();
         try (Connection conn = DBConnection.getConnection();
-             Statement st = conn.createStatement();
-             ResultSet rs = st.executeQuery(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, today);
+            ps.setString(2, today);
+            ResultSet rs = ps.executeQuery();
             while (rs.next()) list.add(mapRow(rs));
         }
         return list;
@@ -59,8 +68,8 @@ public class ElectionDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, election.getTitle());
             ps.setString(2, election.getDescription());
-            ps.setDate(3, Date.valueOf(election.getStartDate()));
-            ps.setDate(4, Date.valueOf(election.getEndDate()));
+            ps.setString(3, election.getStartDate().toString());
+            ps.setString(4, election.getEndDate().toString());
             ps.setBoolean(5, election.isActive());
             ps.setInt(6, election.getId());
             ps.executeUpdate();
@@ -81,8 +90,8 @@ public class ElectionDAO {
             rs.getInt("id"),
             rs.getString("title"),
             rs.getString("description"),
-            rs.getDate("start_date").toLocalDate(),
-            rs.getDate("end_date").toLocalDate(),
+            java.time.LocalDate.parse(rs.getString("start_date")),
+            java.time.LocalDate.parse(rs.getString("end_date")),
             rs.getBoolean("active")
         );
     }

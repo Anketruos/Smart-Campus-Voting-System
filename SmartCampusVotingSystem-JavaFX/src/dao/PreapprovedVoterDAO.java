@@ -19,7 +19,7 @@ public class PreapprovedVoterDAO {
     }
 
     public boolean isPreapproved(String studentId, String email) throws Exception {
-        String sql = "SELECT COUNT(*) FROM preapproved_voters WHERE student_id = ? AND email = ?";
+        String sql = "SELECT COUNT(*) FROM preapproved_voters WHERE student_id = ? AND email = ? AND registered = 0";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, studentId);
@@ -31,7 +31,7 @@ public class PreapprovedVoterDAO {
     }
 
     public void markRegistered(String studentId) throws Exception {
-        String sql = "UPDATE preapproved_voters SET registered = TRUE WHERE student_id = ?";
+        String sql = "UPDATE preapproved_voters SET registered = 1 WHERE student_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, studentId);
@@ -41,7 +41,7 @@ public class PreapprovedVoterDAO {
 
     public List<PreapprovedVoter> findAll() throws Exception {
         List<PreapprovedVoter> list = new ArrayList<>();
-        String sql = "SELECT * FROM preapproved_voters";
+        String sql = "SELECT * FROM preapproved_voters ORDER BY registered, student_id";
         try (Connection conn = DBConnection.getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
@@ -55,5 +55,15 @@ public class PreapprovedVoterDAO {
             }
         }
         return list;
+    }
+
+    public boolean existsByStudentId(String studentId) throws Exception {
+        String sql = "SELECT COUNT(*) FROM preapproved_voters WHERE student_id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, studentId);
+            ResultSet rs = ps.executeQuery();
+            return rs.next() && rs.getInt(1) > 0;
+        }
     }
 }

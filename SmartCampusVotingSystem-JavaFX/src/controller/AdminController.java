@@ -8,6 +8,7 @@ import model.Election;
 import model.Candidate;
 import ui.ElectionUI;
 import util.AlertUtil;
+import util.ValidationUtil;
 import java.util.List;
 
 public class AdminController {
@@ -66,10 +67,29 @@ public class AdminController {
 
     public void handleAddPreapprovedVoter(String studentId, String email) {
         try {
-            preapprovedVoterDAO.insert(new PreapprovedVoter(0, studentId, email, false));
+            String normalizedStudentId = studentId.trim().toUpperCase();
+            String normalizedEmail = email.trim().toLowerCase();
+
+            if (!ValidationUtil.isValidStudentId(normalizedStudentId))
+                throw new IllegalArgumentException("Enter a valid student ID.");
+            if (!ValidationUtil.isValidEmail(normalizedEmail))
+                throw new IllegalArgumentException("Enter a valid email address.");
+            if (preapprovedVoterDAO.existsByStudentId(normalizedStudentId))
+                throw new IllegalArgumentException("That student ID is already in the approved list.");
+
+            preapprovedVoterDAO.insert(new PreapprovedVoter(0, normalizedStudentId, normalizedEmail, false));
             AlertUtil.showInfo("Success", "Voter pre-approved.");
         } catch (Exception e) {
             AlertUtil.showError("Error", e.getMessage());
+        }
+    }
+
+    public List<PreapprovedVoter> loadPreapprovedVoters() {
+        try {
+            return preapprovedVoterDAO.findAll();
+        } catch (Exception e) {
+            AlertUtil.showError("Error", e.getMessage());
+            return List.of();
         }
     }
 

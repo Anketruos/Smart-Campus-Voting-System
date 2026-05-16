@@ -1,42 +1,36 @@
 package network;
 
-import java.io.*;
-import java.net.*;
-import java.util.HashMap;
-import java.util.Map;
+import service.ResultService;
+import service.VotingService;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 /**
- * Central Voting Server (Unit 4: Networking & Client-Server Interaction).
- * Listens for vote requests from client applications.
- *
- * Uses multithreading to handle multiple concurrent voters (Unit 6: Multithreading).
- * Uses synchronized blocks to safely update vote counts (Unit 6: Synchronization).
+ * Socket-based voting server for Unit 4 and Unit 6 demonstrations.
  */
 public class VotingServer {
 
     public static final int PORT = 9090;
-
-    // Shared vote count map — accessed by multiple threads, so access is synchronized
-    private static final Map<String, Integer> voteCounts = new HashMap<>();
-    private static final Object lock = new Object();
 
     public static void main(String[] args) throws IOException {
         System.out.println("VotingServer started on port " + PORT);
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
-                // Each client handled in its own thread (Unit 6: Multithreading)
                 new Thread(new ClientHandler(clientSocket)).start();
             }
         }
     }
 
-    /**
-     * Handles a single client connection.
-     * Protocol: client sends "VOTE:<candidateName>", server replies "OK" or "ERROR:<msg>"
-     */
     static class ClientHandler implements Runnable {
         private final Socket socket;
+        private final VotingService votingService = new VotingService();
+        private final ResultService resultService = new ResultService();
 
         ClientHandler(Socket socket) {
             this.socket = socket;
@@ -49,11 +43,9 @@ public class VotingServer {
 
                 String message = in.readLine();
                 if (message != null && message.startsWith("VOTE:")) {
-                    String candidate = message.substring(5).trim();
-                    recordVote(candidate);
-                    out.println("OK:Vote recorded for " + candidate);
-                } else if ("RESULTS".equals(message)) {
-                    out.println(getResults());
+                    out.println(handleVote(message));
+                } else if (message != null && message.startsWith("RESULTS:")) {
+                    out.println(handleResults(message));
                 } else {
                     out.println("ERROR:Unknown command");
                 }
@@ -62,18 +54,37 @@ public class VotingServer {
             }
         }
 
-        /** Thread-safe vote recording using synchronized block (Unit 6: Synchronization). */
-        private void recordVote(String candidate) {
-            synchronized (lock) {
-                voteCounts.merge(candidate, 1, Integer::sum);
+        private String handleVote(String message) {
+            String[] parts = message.split(":");
+            if (parts.length != 4) {
+                return "ERROR:Expected VOTE:voterId:electionId:candidateId";
+            }
+
+            try {
+                int voterId = Integer.parseInt(parts[1]);
+                int electionId = Integer.parseInt(parts[2]);
+                int candidateId = Integer.parseInt(parts[3]);
+                votingService.castVote(voterId, electionId, candidateId);
+                return "OK:Vote recorded successfully.";
+            } catch (Exception e) {
+                return "ERROR:" + e.getMessage();
             }
         }
 
-        private String getResults() {
-            synchronized (lock) {
-                StringBuilder sb = new StringBuilder("RESULTS:");
-                voteCounts.forEach((k, v) -> sb.append(k).append("=").append(v).append(";"));
-                return sb.toString();
+        private String handleResults(String message) {
+            String[] parts = message.split(":");
+            if (parts.length != 2) {
+                return "ERROR:Expected RESULTS:electionId";
+            }
+
+            try {
+                int electionId = Integer.parseInt(parts[1]);
+                StringBuilder builder = new StringBuilder("RESULTS:");
+                resultService.getResults(electionId)
+                    .forEach((candidate, total) -> builder.append(candidate).append('=').append(total).append(';'));
+                return builder.toString();
+            } catch (Exception e) {
+                return "ERROR:" + e.getMessage();
             }
         }
     }
